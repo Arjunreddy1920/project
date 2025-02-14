@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rental Income Tracker</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2d3e50;
+            margin-top: 20px;
+            font-size: 32px;
+        }
+
+        form {
+            width: 80%;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #5c6bc0;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+        }
+
+        input[type="text"], input[type="number"] {
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 100%;
+        }
+
+        .shop-header {
+            background-color: #eeeeee;
+            padding: 10px;
+            margin: 15px 0;
+            font-size: 20px;
+            border-radius: 5px;
+        }
+
+        .add-shop-btn, button[type="submit"] {
+            background-color: #3f51b5;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .add-shop-btn {
+            margin-top: 20px;
+        }
+
+        button[type="submit"]:hover, .add-shop-btn:hover {
+            background-color: #303f9f;
+        }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .form-footer p {
+            color: #555;
+        }
+
+        .shop-container {
+            margin-top: 20px;
+        }
+
+        .shop-name {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .shop-row {
+            margin-bottom: 20px;
+        }
+
+        .shop-row:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Rental Income Tracker</h1>
+
+    <form id="rentalIncomeForm">
+        <div id="shopsContainer" class="shop-container">
+            <!-- Shops will be loaded here dynamically -->
+        </div>
+
+        <button type="button" class="add-shop-btn" onclick="addShop()">Add Another Shop</button>
+        <br><br>
+        <button type="submit">Save Rental Income</button>
+    </form>
+
+    <div class="form-footer">
+        <p>Rental Income Tracker 2025 &copy; Your Company</p>
+    </div>
+
+    <script>
+        let shopCount = 0;
+
+        // Load saved shops data from localStorage
+        function loadShopsData() {
+            const savedShopsData = JSON.parse(localStorage.getItem('shopsData')) || [];
+            savedShopsData.forEach(shopData => {
+                addShop(shopData);
+            });
+        }
+
+        // Function to add a new shop (or load an existing shop)
+        function addShop(shopData = null) {
+            shopCount++;
+
+            const shopContainer = document.getElementById('shopsContainer');
+
+            const shopDiv = document.createElement('div');
+            shopDiv.classList.add('shop');
+            shopDiv.id = 'shop' + shopCount;
+
+            const shopTitle = document.createElement('div');
+            shopTitle.classList.add('shop-header');
+            const shopNameInput = document.createElement('input');
+            shopNameInput.type = 'text';
+            shopNameInput.name = 'shopName';
+            shopNameInput.value = shopData ? shopData.shopName : 'Shop ' + shopCount;
+            shopNameInput.placeholder = 'Enter Shop Name';
+
+            shopTitle.appendChild(shopNameInput);
+
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            thead.innerHTML = `
+                <tr>
+                    <th>Month</th>
+                    <th>Rental Income ($)</th>
+                    <th>Rent Received</th>
+                </tr>
+            `;
+
+            const tbody = document.createElement('tbody');
+            const months = ['January', 'February', 'March', 'April', 'May', 'June'];
+
+            months.forEach(month => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${month}</td>
+                    <td><input type="number" name="${month.toLowerCase()}Income" value="${shopData ? shopData[month.toLowerCase() + 'Income'] : ''}" placeholder="Enter amount"></td>
+                    <td><input type="checkbox" name="${month.toLowerCase()}Received" ${shopData && shopData[month.toLowerCase() + 'Received'] ? 'checked' : ''} class="checkbox"></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            table.appendChild(thead);
+            table.appendChild(tbody);
+            shopDiv.appendChild(shopTitle);
+            shopDiv.appendChild(table);
+
+            shopContainer.appendChild(shopDiv);
+        }
+
+        // Handle form submission
+        document.getElementById('rentalIncomeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const allShopsData = [];
+            const shops = document.querySelectorAll('.shop');
+
+            shops.forEach(shop => {
+                const shopData = {};
+                const shopNameInput = shop.querySelector('input[name="shopName"]');
+                const shopName = shopNameInput.value.trim();
+
+                shopData.shopName = shopName;
+
+                const inputs = shop.querySelectorAll('input');
+                inputs.forEach(input => {
+                    if (input.type === 'number') {
+                        shopData[input.name] = input.value;
+                    } else if (input.type === 'checkbox') {
+                        shopData[input.name] = input.checked;
+                    }
+                });
+
+                allShopsData.push(shopData);
+            });
+
+            // Save the data to localStorage
+            localStorage.setItem('shopsData', JSON.stringify(allShopsData));
+
+            // For demonstration, log all the data to the console
+            console.log(allShopsData);
+
+            alert('Rental income data saved!');
+        });
+
+        // Load saved data on page load
+        window.onload = loadShopsData;
+
+    </script>
+
+</body>
+</html>
